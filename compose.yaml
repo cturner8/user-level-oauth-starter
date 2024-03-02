@@ -1,0 +1,45 @@
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/javascript-node:20-bookworm
+    environment:
+      MYSQL_USER: zoom
+      MYSQL_HOST: db
+      MYSQL_DATABASE: zoom
+      MYSQL_PASSWORD: zoom
+      MYSQL_CIPHER_KEY: BvpxVLnk2loK8XN5M5HCUtle5SYaGoxE
+      MYSQL_TABLE: zoomCredential
+    networks:
+      - local
+    ports:
+      - 8000:8000
+  
+  db:
+    image: mariadb:jammy
+    command: '--default-authentication-plugin=mysql_native_password'
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 --password="zoom" --silent']
+      interval: 3s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - db_data:/var/lib/mysql
+    configs:
+      - source: db_init
+        target: /docker-entrypoint-initdb.d/init.sql
+    environment:
+      MARIADB_DATABASE: zoom
+      MARIADB_USER: zoom
+      MARIADB_PASSWORD: zoom
+      MARIADB_RANDOM_ROOT_PASSWORD: y
+    networks:
+      - local
+
+volumes:
+  db_data: {}
+
+networks:
+  local: {}
+
+configs:
+  db_init:
+    file: ./init.sql
